@@ -64,6 +64,10 @@ export function ExecutorDetail({ executor, onBack, isAdmin }: { executor: Execut
               {...({ fetchPriority: "high" } as any)}
               decoding="async"
               onLoad={() => setIsBannerLoaded(true)}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80';
+                setIsBannerLoaded(true);
+              }}
               className="w-full h-full object-cover" 
             />
             {/* Watermark simulation if needed, but the images already have it */}
@@ -78,6 +82,9 @@ export function ExecutorDetail({ executor, onBack, isAdmin }: { executor: Execut
                 referrerPolicy="no-referrer" 
                 loading="lazy"
                 decoding="async"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80';
+                }}
                 className="w-full h-full object-cover" 
               />
              </div>
@@ -112,6 +119,9 @@ export function ExecutorDetail({ executor, onBack, isAdmin }: { executor: Execut
                 referrerPolicy="no-referrer" 
                 loading="lazy"
                 decoding="async"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&q=80';
+                }}
                 className="w-full h-full object-cover rounded-xl" 
               />
             </div>

@@ -111,23 +111,29 @@ export function SubmitScriptModal({ onClose, editScript, isAdmin }: { onClose: (
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) return;
-
+    if (!auth.currentUser) {
+      alert("You must be signed in to publish scripts.");
+      return;
+    }
+    
     setLoading(true);
     try {
+      const author = auth.currentUser.displayName || 'Anonymous';
+      const authorId = auth.currentUser.uid;
+
       if (editScript) {
         const scriptRef = doc(db, 'scripts', editScript.id);
         await setDoc(scriptRef, {
           ...formData,
-          author: editScript.author || auth.currentUser.displayName || 'Anonymous',
-          authorId: editScript.authorId || auth.currentUser.uid,
+          author: editScript.author || author,
+          authorId: editScript.authorId || authorId,
           updatedAt: 'Just now'
         }, { merge: true });
       } else {
         await addDoc(collection(db, 'scripts'), {
           ...formData,
-          author: auth.currentUser.displayName || 'Anonymous',
-          authorId: auth.currentUser.uid,
+          author,
+          authorId,
           views: 0,
           likes: 0,
           isNew: true,

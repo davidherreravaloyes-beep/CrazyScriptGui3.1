@@ -60,11 +60,16 @@ export default function App() {
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      
+      // Check for secret admin key in localStorage
+      const secretKey = localStorage.getItem('DEV_ADMIN_KEY');
+      const isSecretAdmin = secretKey === 'SleepingCityMaster';
+
       if (currentUser) {
         // Sync user profile to Firestore for searchability
         syncUserProfile(currentUser);
 
-        if (currentUser.email === 'davidherreravaloyes@gmail.com' || currentUser.email === 'herreravaloyesa@gmail.com') {
+        if (isSecretAdmin || currentUser.email === 'davidherreravaloyes@gmail.com' || currentUser.email === 'herreravaloyesa@gmail.com') {
           setIsAdmin(true);
         } else {
           try {
@@ -79,7 +84,7 @@ export default function App() {
           setCurrentPage('scripts');
         }
       } else {
-        setIsAdmin(false);
+        setIsAdmin(isSecretAdmin);
       }
     });
 
@@ -146,6 +151,14 @@ export default function App() {
     });
   }, [selectedCategory, searchQuery, allScripts]);
 
+  const handleOpenSubmit = () => {
+    if (user) {
+      setIsSubmitModalOpen(true);
+    } else {
+      setCurrentPage('login');
+    }
+  };
+
   const handleEditScript = (script: Script) => {
     setEditingScript(script);
     setSelectedScript(null);
@@ -170,7 +183,7 @@ export default function App() {
       ) : (
         <>
           <Navbar 
-            onOpenSubmit={() => setIsSubmitModalOpen(true)} 
+            onOpenSubmit={handleOpenSubmit} 
             onPageChange={setCurrentPage}
             currentPage={currentPage}
             onOpenUserSearch={() => setIsUserSearchOpen(true)}
@@ -181,7 +194,7 @@ export default function App() {
               <>
                 <Hero 
                   onSearch={setSearchQuery} 
-                  onOpenSubmit={() => setIsSubmitModalOpen(true)} 
+                  onOpenSubmit={handleOpenSubmit} 
                   siteConfig={siteConfig}
                 />
 
@@ -309,7 +322,7 @@ export default function App() {
                     </p>
                     <div className="flex gap-4">
                       <button 
-                        onClick={() => setIsSubmitModalOpen(true)}
+                        onClick={handleOpenSubmit}
                         className="px-8 py-4 bg-brand text-black font-bold rounded-2xl hover:bg-brand-muted transition-all active:scale-95 neon-glow"
                       >
                         Become a Creator

@@ -43,7 +43,7 @@ service cloud.firestore {
 
     function isValidScript(data) {
       return data.title is string && data.title.size() <= 100 &&
-             data.authorId == request.auth.uid &&
+             isSignedIn() && data.authorId == request.auth.uid &&
              data.rawScript is string && data.rawScript.size() <= 100000 &&
              (data.description == null || (data.description is string && data.description.size() <= 5000)) &&
              (data.game == null || (data.game is string && data.game.size() <= 100)) &&
@@ -54,7 +54,7 @@ service cloud.firestore {
     }
 
     function isValidRating(data) {
-      return data.userId == request.auth.uid &&
+      return (isSignedIn() ? data.userId == request.auth.uid : data.userId == 'guest') &&
              data.rating is number && data.rating >= 1 && data.rating <= 5;
     }
 
@@ -65,14 +65,14 @@ service cloud.firestore {
     }
 
     function isValidUsername(data) {
-      return data.uid == request.auth.uid &&
+      return isSignedIn() && data.uid == request.auth.uid &&
              data.username is string && data.username.size() >= 3 && data.username.size() <= 20 &&
              data.username.matches('^[a-zA-Z0-9_]+$');
     }
 
     // Rules
     match /admins/{adminId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if false;
     }
 
@@ -93,17 +93,12 @@ service cloud.firestore {
     match /scripts/{scriptId} {
       allow read: if true;
       allow create: if isSignedIn() && isValidId(scriptId) && isValidScript(incoming()) && incoming().createdAt == request.time;
-      allow update: if isSignedIn() && (
-        isAdmin() ||
-        (isOwner(existing().authorId) && incoming().diff(existing()).affectedKeys().hasAll(['updatedAt']) && incoming().updatedAt == request.time) ||
+      allow update: if (isAdmin() || (isSignedIn() && isOwner(existing().authorId) && incoming().diff(existing()).affectedKeys().hasAll(['updatedAt']) && incoming().updatedAt == request.time)) ||
         // Action: Rate/Interact
         (incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'ratingCount', 'views', 'likes']) &&
-         // Atomic check: Ensure the user actually just wrote a rating OR we trust the rate limit logic
-         // For view/likes we just allow it since they are public increments
          true
-        )
-      );
-      allow delete: if isAdmin() || isOwner(existing().authorId);
+        );
+      allow delete: if isAdmin() || (isSignedIn() && isOwner(existing().authorId));
 
       match /ratings/{userId} {
         allow read: if true;
