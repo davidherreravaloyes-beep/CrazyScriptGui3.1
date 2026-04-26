@@ -15,7 +15,6 @@ import { Executors } from './components/Executors';
 import { AdminPanel } from './components/AdminPanel';
 import { LoginView } from './components/LoginView';
 import { Footer } from './components/Footer';
-import { MusicPlayer } from './components/MusicPlayer';
 import { MOCK_SCRIPTS, CATEGORIES, Script } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { Flame, Star, Trophy, Loader2, Gem } from 'lucide-react';
@@ -165,8 +164,6 @@ export default function App() {
       <AnimatePresence>
         {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       </AnimatePresence>
-
-      <MusicPlayer />
 
       {currentPage === 'login' ? (
         <LoginView onBack={() => setCurrentPage('scripts')} />
