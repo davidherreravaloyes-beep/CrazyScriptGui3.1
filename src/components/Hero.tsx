@@ -13,12 +13,12 @@ export function Hero({ onSearch, onOpenSubmit, siteConfig }: { onSearch: (query:
       {/* High-tech background image */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop" 
+          src="https://images.unsplash.com/photo-1533134486753-c833f0ed4866?q=80&w=2070&auto=format&fit=crop" 
           alt="Background" 
-          className="w-full h-full object-cover opacity-20 filter grayscale brightness-50"
+          className="w-full h-full object-cover opacity-30 filter grayscale brightness-50"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-background" />
       </div>
 
       {/* Background blobs */}

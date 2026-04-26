@@ -102,12 +102,26 @@
         "uploadTitle": { "type": "string" },
         "uploadSubtitle": { "type": "string" }
       }
+    },
+    "usernames": {
+      "title": "Username Mapping",
+      "description": "Ensures username uniqueness.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "username": { "type": "string" }
+      },
+      "required": ["uid", "username"]
     }
   },
   "firestore": {
     "users/{userId}": {
       "schema": "users",
       "description": "Collection of users."
+    },
+    "usernames/{username}": {
+      "schema": "usernames",
+      "description": "Unique username registry."
     },
     "scripts/{scriptId}": {
       "schema": "scripts",

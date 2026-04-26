@@ -51,8 +51,22 @@ export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSear
     };
   }, []);
 
-  const handleLogin = () => {
-    onPageChange('login');
+  const handleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result.user) {
+        // App.tsx handles the Firestore sync via the auth state listener
+        console.log("Logged in successfully");
+      }
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      if (error.code === 'auth/popup-blocked') {
+        // Fallback to the login page if popup is blocked
+        onPageChange('login');
+      } else if (error.code !== 'auth/popup-closed-by-user') {
+        alert("Login failed: " + error.message);
+      }
+    }
   };
 
   const handleLogout = async () => {
@@ -168,7 +182,7 @@ export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSear
                       )}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-medium text-white">{user.displayName?.split(' ')[0]}</span>
+                      <span className="text-sm font-medium text-white">{(user.displayName || 'Guest').split(' ')[0]}</span>
                       {isAdmin && <Gavel size={12} className="text-brand" fill="currentColor" />}
                     </div>
                   </button>
@@ -287,7 +301,7 @@ export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSear
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">{user.displayName}</span>
+                      <span className="text-white font-medium">{user.displayName || 'Guest User'}</span>
                       {isAdmin && <Gavel size={14} className="text-brand" fill="currentColor" />}
                     </div>
                     <span className="text-[10px] text-brand font-bold uppercase tracking-wider">Edit Profile</span>

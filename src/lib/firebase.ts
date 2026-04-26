@@ -1,6 +1,17 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, updateProfile, User } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  onAuthStateChanged, 
+  updateProfile, 
+  User,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInAnonymously,
+  signOut
+} from 'firebase/auth';
+import { getFirestore, doc, getDocFromServer, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 
@@ -58,6 +69,35 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
+// User Profile Sync Helper
+export async function syncUserProfile(user: User) {
+  const userRef = doc(db, 'users', user.uid);
+  try {
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) {
+      // Create new user
+      await setDoc(userRef, {
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+      });
+    } else {
+      // Update existing user
+      await updateDoc(userRef, {
+        displayName: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        lastLogin: serverTimestamp(),
+      });
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
+  }
+}
+
 // Test connection CRITICAL CONSTRAINT
 async function testConnection() {
   try {
@@ -70,5 +110,13 @@ async function testConnection() {
 }
 testConnection();
 
-export { signInWithPopup, onAuthStateChanged, updateProfile };
+export { 
+  signInWithPopup, 
+  onAuthStateChanged, 
+  updateProfile,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInAnonymously,
+  signOut
+};
 export type { User };

@@ -9,6 +9,8 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     owner: 'D4vidskys'
   });
 
+  const [hasPlayed, setHasPlayed] = useState(false);
+
   useEffect(() => {
     // Load config directly for splash (since it's the very first thing)
     const loadConfig = async () => {
@@ -28,22 +30,32 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     loadConfig();
 
     // Cinematic intro impact
-    const audio = new Audio('https://www.myinstants.com/media/sounds/yousoko-watashi-no-souru-societi-e.mp3'); 
-    
-    audio.volume = 0.5;
+    const audio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); 
+    audio.currentTime = 10; // Start a bit into it for more immediate sound
+    audio.volume = 0.2;
 
-    const soundTimer = setTimeout(() => {
-      audio.play().catch(e => console.log("Sound impact blocked:", e));
-    }, 800);
+    audio.onerror = () => {
+      console.warn("Splash sound failed to load.");
+    };
+
+    let soundTimer: NodeJS.Timeout;
+    if (!hasPlayed) {
+      soundTimer = setTimeout(() => {
+        if (audio.readyState >= 2) {
+          audio.play().catch(e => console.log("Sound impact blocked:", e));
+        }
+        setHasPlayed(true);
+      }, 1200);
+    }
 
     const timer = setTimeout(() => {
       onComplete();
     }, 3800);
     return () => {
       clearTimeout(timer);
-      clearTimeout(soundTimer);
+      if (soundTimer) clearTimeout(soundTimer);
     };
-  }, [onComplete]);
+  }, [onComplete, hasPlayed]);
 
   // Split the text into two parts for the C/G animation
   const midPoint = Math.ceil(splashConfig.text.length / 2);

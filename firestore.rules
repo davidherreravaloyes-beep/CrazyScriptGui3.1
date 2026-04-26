@@ -36,7 +36,7 @@ service cloud.firestore {
     // Validation Helpers
     function isValidUser(data) {
       return data.uid == request.auth.uid &&
-             data.email is string && data.email.size() <= 200 &&
+             (data.email == null || (data.email is string && data.email.size() <= 200)) &&
              (data.displayName == null || (data.displayName is string && data.displayName.size() <= 100)) &&
              (data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 500));
     }
@@ -64,24 +64,35 @@ service cloud.firestore {
              data.icon is string && data.icon.size() <= 500;
     }
 
+    function isValidUsername(data) {
+      return data.uid == request.auth.uid &&
+             data.username is string && data.username.size() >= 3 && data.username.size() <= 20 &&
+             data.username.matches('^[a-zA-Z0-9_]+$');
+    }
+
     // Rules
     match /admins/{adminId} {
       allow read: if isSignedIn();
       allow write: if false;
     }
 
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidUsername(incoming()) && !exists(/databases/$(database)/documents/usernames/$(username));
+    }
+
     match /users/{userId} {
       allow read: if true;
-      allow create: if isVerified() && isValidUser(incoming()) && incoming().createdAt == request.time;
+      allow create: if isSignedIn() && isValidUser(incoming()) && incoming().createdAt == request.time;
       allow update: if (isOwner(userId) || isAdmin()) && (
         isAdmin() || 
-        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'lastLogin']) && incoming().lastLogin == request.time)
+        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'lastLogin', 'email']) && incoming().lastLogin == request.time)
       );
     }
 
     match /scripts/{scriptId} {
       allow read: if true;
-      allow create: if isVerified() && isValidId(scriptId) && isValidScript(incoming()) && incoming().createdAt == request.time;
+      allow create: if isSignedIn() && isValidId(scriptId) && isValidScript(incoming()) && incoming().createdAt == request.time;
       allow update: if isSignedIn() && (
         isAdmin() ||
         (isOwner(existing().authorId) && incoming().diff(existing()).affectedKeys().hasAll(['updatedAt']) && incoming().updatedAt == request.time) ||
