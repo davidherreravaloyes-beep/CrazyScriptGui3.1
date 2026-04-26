@@ -52,21 +52,7 @@ export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSear
   }, []);
 
   const handleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      if (result.user) {
-        // App.tsx handles the Firestore sync via the auth state listener
-        console.log("Logged in successfully");
-      }
-    } catch (error: any) {
-      console.error("Login failed:", error);
-      if (error.code === 'auth/popup-blocked') {
-        // Fallback to the login page if popup is blocked
-        onPageChange('login');
-      } else if (error.code !== 'auth/popup-closed-by-user') {
-        alert("Login failed: " + error.message);
-      }
-    }
+    onPageChange('login');
   };
 
   const handleLogout = async () => {

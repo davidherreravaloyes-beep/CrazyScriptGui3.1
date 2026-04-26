@@ -25,9 +25,6 @@ export function LoginView({ onBack }: { onBack: () => void }) {
       }
     });
 
-    // Auto-trigger Google Sign-In on mount
-    handleGoogleLogin();
-
     return () => unsubscribe();
   }, [onBack]);
 
@@ -45,13 +42,15 @@ export function LoginView({ onBack }: { onBack: () => void }) {
     } catch (error: any) {
       console.error("Login Error:", error);
       if (error.code === 'auth/popup-blocked') {
-        setError("Popup was blocked. Please allow popups for this site.");
+        setError("The login popup was blocked by your browser. Please allow popups for this site and click the button again.");
       } else if (error.code === 'auth/unauthorized-domain') {
-        setError("Domain not authorized in Firebase Console.");
+        setError("This domain is not authorized in the Firebase project settings. You may need to use the Development App URL or add this domain to your Authorized Domains in the Firebase Console.");
       } else if (error.code === 'auth/popup-closed-by-user') {
-        setError("Login cancelled. Click the button below to try again.");
+        setError("Login was interrupted. Please try again.");
+      } else if (error.code === 'auth/operation-not-allowed') {
+        setError("Google Sign-In is not enabled in the Firebase Console. Please enable it in the Authentication tab.");
       } else {
-        setError("Login failed: " + error.message);
+        setError("An unexpected error occurred: " + error.message);
       }
     } finally {
       setLoading(false);
