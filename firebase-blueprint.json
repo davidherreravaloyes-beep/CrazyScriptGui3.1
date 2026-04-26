@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "users": {
+      "title": "User",
+      "description": "Represents a user of the application.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastLogin": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "scripts": {
+      "title": "Script",
+      "description": "Represents a gaming script/GUI.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "author": { "type": "string" },
+        "authorId": { "type": "string" },
+        "category": { "type": "string" },
+        "views": { "type": "number" },
+        "likes": { "type": "number" },
+        "rating": { "type": "number" },
+        "ratingCount": { "type": "number" },
+        "game": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "rawScript": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "isTrending": { "type": "boolean" },
+        "isNew": { "type": "boolean" },
+        "isPremium": { "type": "boolean" }
+      },
+      "required": ["title", "authorId", "rawScript"]
+    },
+    "ratings": {
+      "title": "Rating",
+      "description": "A 1-5 star rating for a script.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "scriptId": { "type": "string" },
+        "rating": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "scriptId", "rating"]
+    },
+    "admins": {
+      "title": "Admin",
+      "description": "Represents an administrator UID.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "addedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email"]
+    },
+    "executors": {
+      "title": "Executor",
+      "description": "Represents a script executor.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "author": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string" },
+        "version": { "type": "string" },
+        "banner": { "type": "string" },
+        "icon": { "type": "string" },
+        "price": { "type": "string" },
+        "platforms": { "type": "array", "items": { "type": "string" } },
+        "downloads": { "type": "string" },
+        "website": { "type": "string" },
+        "discord": { "type": "string" },
+        "unc": { "type": "string" },
+        "lastWorked": { "type": "string" },
+        "updatedDate": { "type": "string" },
+        "gallery": { "type": "array", "items": { "type": "string" } },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "banner", "icon"]
+    },
+    "siteConfig": {
+      "title": "Site Configuration",
+      "description": "Site branding and metadata.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "brand": { "type": "string" },
+        "logo": { "type": "string" },
+        "brandColor": { "type": "string" },
+        "featuredTitle": { "type": "string" },
+        "premiumTitle": { "type": "string" },
+        "premiumSubtitle": { "type": "string" },
+        "uploadTitle": { "type": "string" },
+        "uploadSubtitle": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "users",
+      "description": "Collection of users."
+    },
+    "scripts/{scriptId}": {
+      "schema": "scripts",
+      "description": "Collection of scripts."
+    },
+    "scripts/{scriptId}/ratings/{userId}": {
+      "schema": "ratings",
+      "description": "Subcollection of ratings for a script."
+    },
+    "admins/{adminId}": {
+      "schema": "admins",
+      "description": "Collection of administrator UIDs. Document IDs should be the user UIDs."
+    },
+    "executors/{executorId}": {
+      "schema": "executors",
+      "description": "Collection of script executors."
+    },
+    "config/site": {
+      "schema": "siteConfig",
+      "description": "Global site configuration."
+    }
+  }
+}

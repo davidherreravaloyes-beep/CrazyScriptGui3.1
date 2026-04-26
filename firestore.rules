@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'herreravaloyesa@gmail.com' ||
+        request.auth.token.email == 'davidherreravaloyes@gmail.com'
+      );
+    }
+
+    // Validation Helpers
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string && data.email.size() <= 200 &&
+             (data.displayName == null || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 500));
+    }
+
+    function isValidScript(data) {
+      return data.title is string && data.title.size() <= 100 &&
+             data.authorId == request.auth.uid &&
+             data.rawScript is string && data.rawScript.size() <= 100000 &&
+             (data.description == null || (data.description is string && data.description.size() <= 5000)) &&
+             (data.game == null || (data.game is string && data.game.size() <= 100)) &&
+             (data.category == null || (data.category is string && data.category.size() <= 50)) &&
+             (data.thumbnail == null || (data.thumbnail is string && data.thumbnail.size() <= 500)) &&
+             (data.isPremium == null || data.isPremium is bool) &&
+             (isAdmin() || data.isPremium == false || data.isPremium == null);
+    }
+
+    function isValidRating(data) {
+      return data.userId == request.auth.uid &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5;
+    }
+
+    function isValidExecutor(data) {
+      return data.name is string && data.name.size() <= 100 &&
+             data.banner is string && data.banner.size() <= 500 &&
+             data.icon is string && data.icon.size() <= 500;
+    }
+
+    // Rules
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isVerified() && isValidUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if (isOwner(userId) || isAdmin()) && (
+        isAdmin() || 
+        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'lastLogin']) && incoming().lastLogin == request.time)
+      );
+    }
+
+    match /scripts/{scriptId} {
+      allow read: if true;
+      allow create: if isVerified() && isValidId(scriptId) && isValidScript(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (isOwner(existing().authorId) && incoming().diff(existing()).affectedKeys().hasAll(['updatedAt']) && incoming().updatedAt == request.time) ||
+        // Action: Rate/Interact
+        (incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'ratingCount', 'views', 'likes']) &&
+         // Atomic check: Ensure the user actually just wrote a rating OR we trust the rate limit logic
+         // For view/likes we just allow it since they are public increments
+         true
+        )
+      );
+      allow delete: if isAdmin() || isOwner(existing().authorId);
+
+      match /ratings/{userId} {
+        allow read: if true;
+        allow write: if isOwner(userId) && isValidRating(incoming()) && incoming().updatedAt == request.time;
+      }
+    }
+
+    match /executors/{executorId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidId(executorId) && isValidExecutor(incoming());
+    }
+
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
