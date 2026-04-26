@@ -42,15 +42,15 @@ export function LoginView({ onBack }: { onBack: () => void }) {
     } catch (error: any) {
       console.error("Login Error:", error);
       if (error.code === 'auth/popup-blocked') {
-        setError("The login popup was blocked by your browser. Please allow popups for this site and click the button again.");
+        setError("La ventana emergente de inicio de sesión fue bloqueada por tu navegador. Por favor, permite las ventanas emergentes para este sitio e inténtalo de nuevo.");
       } else if (error.code === 'auth/unauthorized-domain') {
-        setError("This domain is not authorized in the Firebase project settings. You may need to use the Development App URL or add this domain to your Authorized Domains in the Firebase Console.");
+        setError("Este dominio no está autorizado en la configuración del proyecto de Firebase. Debes agregar 'crazy-script-gui3-1.vercel.app' a la lista de dominios autorizados en la Consola de Firebase -> Authentication -> Settings.");
       } else if (error.code === 'auth/popup-closed-by-user') {
-        setError("Login was interrupted. Please try again.");
+        setError("El inicio de sesión fue interrumpido. Por favor, inténtalo de nuevo.");
       } else if (error.code === 'auth/operation-not-allowed') {
-        setError("Google Sign-In is not enabled in the Firebase Console. Please enable it in the Authentication tab.");
+        setError("El inicio de sesión con Google no está habilitado en la Consola de Firebase. Por favor, actívalo en la sección de Authentication.");
       } else {
-        setError("An unexpected error occurred: " + error.message);
+        setError("Ocurrió un error inesperado: " + error.message);
       }
     } finally {
       setLoading(false);
