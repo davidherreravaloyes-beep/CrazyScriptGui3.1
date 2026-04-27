@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { SplashScreen } from './components/SplashScreen';
 import { Hero } from './components/Hero';
@@ -15,19 +15,22 @@ import { Executors } from './components/Executors';
 import { AdminPanel } from './components/AdminPanel';
 import { LoginView } from './components/LoginView';
 import { Footer } from './components/Footer';
-import { MOCK_SCRIPTS, CATEGORIES, Script } from './constants';
+import { MOCK_SCRIPTS, CATEGORIES, Script, Executor } from './constants';
+import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import { Flame, Star, Trophy, Loader2, Gem } from 'lucide-react';
+import { Flame, Star, Trophy, Loader2, Gem, Sparkles } from 'lucide-react';
 import { db, auth, onAuthStateChanged, type User, handleFirestoreError, OperationType, syncUserProfile } from './lib/firebase';
-import { collection, onSnapshot, query, orderBy, getDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, getDoc, doc, setDoc, updateDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { UserProfileModal } from './components/UserProfileModal';
 import { UserSearchModal } from './components/UserSearchModal';
+import { AISearch } from './components/AISearch';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'scripts' | 'executors' | 'admin' | 'login'>('scripts');
+  const [currentPage, setCurrentPage] = useState<'scripts' | 'executors' | 'admin' | 'login' | 'crazy-ia'>('scripts');
   const [user, setUser] = useState<User | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'latest' | 'views' | 'likes'>('latest');
   const [selectedScript, setSelectedScript] = useState<Script | null>(null);
   const [editingScript, setEditingScript] = useState<Script | null>(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
@@ -107,6 +110,155 @@ export default function App() {
     };
   }, [currentPage]);
 
+  // Auto-boost tracking (Admin only)
+  const lastBoostTimes = useRef<{ [key: string]: { views: number, likes: number } }>({});
+
+  // Auto-boost interval for scripts (Admin only)
+  useEffect(() => {
+    if (!isAdmin || firestoreScripts.length === 0) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      firestoreScripts.forEach(async (script) => {
+        try {
+          const times = lastBoostTimes.current[script.id] || { views: 0, likes: 0 };
+          let update: any = {};
+          let shouldUpdate = false;
+
+          // Views Logic: 1k every 5s if < 100k, otherwise every 120s
+          if (script.views < 100000) {
+            update.views = increment(1000);
+            shouldUpdate = true;
+          } else if (now - times.views >= 120000) {
+            update.views = increment(1000);
+            times.views = now;
+            shouldUpdate = true;
+          }
+
+          // Likes Logic: 5 every 5s if < 120k, otherwise every 90s
+          if (script.likes < 120000) {
+            update.likes = increment(5);
+            shouldUpdate = true;
+          } else if (now - times.likes >= 90000) {
+            update.likes = increment(5);
+            times.likes = now;
+            shouldUpdate = true;
+          }
+
+          if (shouldUpdate) {
+            update.updatedAt = serverTimestamp();
+            lastBoostTimes.current[script.id] = times;
+            await updateDoc(doc(db, 'scripts', script.id), update);
+          }
+        } catch (e) {
+          // Silent fail for scripts that might not be in Firestore or permission issues
+        }
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isAdmin, firestoreScripts]);
+
+  const [firestoreExecutors, setFirestoreExecutors] = useState<Executor[]>([]);
+
+  useEffect(() => {
+    const q = query(collection(db, 'executors'), orderBy('updatedAt', 'desc'));
+    const unsubscribeExecutors = onSnapshot(q, (snapshot) => {
+      const executors = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Executor[];
+      setFirestoreExecutors(executors);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'executors');
+    });
+
+    return () => {
+      unsubscribeExecutors();
+    };
+  }, []);
+
+  // Bot Posting System (Admin only or always-on simulator)
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const bots = [
+      { id: 'bot1', name: 'ScoutIA', source: 'scriptdee.com' },
+      { id: 'bot2', name: 'DeltaBot', source: 'scriptpastebin.com' },
+      { id: 'bot3', name: 'Spectrum', source: 'rscripts.net' },
+      { id: 'bot4', name: 'SkyScraper', source: 'scriptblox.com' },
+      { id: 'bot5', name: 'Nexus', source: 'scriptdee.com' },
+      { id: 'bot6', name: 'Thermomix', source: 'scriptpastebin.com' },
+      { id: 'bot7', name: 'elgoat', source: 'delta-hub.com' },
+      { id: 'bot8', name: 'lilbrocazy', source: 'scriptblox.com' },
+      { id: 'bot9', name: 'Lexxx', source: 'scriptdee.com' },
+      { id: 'bot10', name: 'AzaShadow', source: 'scriptpastebin.com' }
+    ];
+
+    const interval = setInterval(async () => {
+      if (!user) return;
+      const bot = bots[Math.floor(Math.random() * bots.length)];
+      
+      const discoveries = [
+          { title: 'Delta Hub V3', game: 'Universal', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/DeltaHub/Main/main/v3.lua"))()' },
+          { title: 'Blox Fruits Hub', game: 'Blox Fruits', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/ScriptHub/Main/main/blox_delta_v2.lua"))()' },
+          { title: 'Pet Sim 99 Farm', game: 'Pet Simulator 99', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/PS99Bots/Stable/main/ps99_delta.lua"))()' },
+          { title: 'Haze Piece Infinite', game: 'Haze Piece', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/HazeX25/Public/main/haze_universal.lua"))()' },
+          { title: 'King Legacy Farm', game: 'King Legacy', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/KingLegPro/Main/main/king_delta.lua"))()' },
+          { title: 'Brookhaven Admin GUI', game: 'Brookhaven', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/AdminCmds24/Brook/main/gui_v2.lua"))()' },
+          { title: 'MM2 Eclipse Hub', game: 'Murder Mystery 2', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/EclipseDev/Main/main/mm2_delta_final.lua"))()' },
+          { title: 'Blade Ball Parry', game: 'Blade Ball', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/BladeDev/Main/main/parry_v3.lua"))()' },
+          { title: 'Adopt Me Better', game: 'Adopt Me!', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/AdoptDev/Main/main/adopt_fixed.lua"))()' },
+          { title: 'Bee Swarm Sim OP', game: 'Bee Swarm Simulator', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/BeeSim6/Main/main/v6_fixed.lua"))()' },
+          { title: 'Doors Monster Avoid', game: 'Doors', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/DoorsExpl/Main/main/safe_v4.lua"))()' },
+          { title: 'Solara Admin Panel', game: 'Universal', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/SolaraDev/Main/main/panel_v2.lua"))()' },
+          { title: 'Arsenal Aimbot Pro', game: 'Arsenal', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/ArsDev/Main/main/aim.lua"))()' },
+          { title: 'Da Hood Silent Aim', game: 'Da Hood', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/DHoodDev/Main/main/silent.lua"))()' },
+          { title: 'Natural Disaster Survival', game: 'Natural Disaster Survival', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/NDS/Main/main/script.lua"))()' },
+          { title: 'Prison Life Admin', game: 'Prison Life', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/PL/Main/main/admin.lua"))()' },
+          { title: 'Build A Boat AutoFarm', game: 'Build A Boat For Treasure', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/BAB/Main/main/farm.lua"))()' },
+          { title: 'Lumber Tycoon 2 Gui', game: 'Lumber Tycoon 2', code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/LT2/Main/main/gui.lua"))()' }
+        ];
+
+        const scriptData = discoveries[Math.floor(Math.random() * discoveries.length)];
+        const icons = ['TreePine', 'Target', 'Sword', 'Cloud', 'Globe', 'Leaf', 'Zap', 'Skull', 'Shield', 'Search', 'Lock', 'Key', 'Ghost', 'Flame', 'Gem', 'Star'];
+        const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+        
+        // Strict duplicate and similarity detection
+        const isDuplicate = firestoreScripts.some(s => {
+          const s1 = s.title.toLowerCase().replace(/new script/g, '').replace(/\[.*?\]/g, '').trim();
+          const s2 = scriptData.title.toLowerCase().replace(/\[.*?\]/g, '').trim();
+          return s1.includes(s2) || s2.includes(s1) || s.rawScript === scriptData.code;
+        });
+        if (isDuplicate) return;
+
+        const scriptId = `bot-${bot.id}-${Date.now()}`;
+
+        try {
+          await setDoc(doc(db, 'scripts', scriptId), {
+            title: `NEW script ${scriptData.title}`,
+            rawScript: scriptData.code,
+            game: scriptData.game,
+            author: bot.name,
+            authorId: user.uid,
+            views: Math.floor(Math.random() * 2500),
+            likes: Math.floor(Math.random() * 150),
+            isVerified: true,
+            iconName: randomIcon,
+            category: 'Adventure',
+            description: `script actualizado 👾 | Nuevo script para Delta Executor [${scriptData.game}] | ¡Funcionando perfectamente!`,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            discoverySource: bot.source
+          });
+        } catch (e) {
+          console.error('Bot failed to post:', e);
+        }
+      }, 120000); // Every 2 minutes for more active simulation
+
+    return () => clearInterval(interval);
+  }, [isAdmin]);
+
   useEffect(() => {
     const syncExternalScripts = async () => {
       try {
@@ -141,7 +293,7 @@ export default function App() {
   }, [firestoreScripts, externalScripts]);
 
   const filteredScripts = useMemo(() => {
-    return allScripts.filter(script => {
+    const filtered = allScripts.filter(script => {
       const isActuallyPremium = script.isPremium;
       const matchesCategory = selectedCategory === 'All' || script.category === selectedCategory;
       const matchesSearch = script.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -149,7 +301,23 @@ export default function App() {
                            script.author.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch && !isActuallyPremium;
     });
-  }, [selectedCategory, searchQuery, allScripts]);
+
+    // Apply Sorting
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'views') return (b.views || 0) - (a.views || 0);
+      if (sortBy === 'likes') return (b.likes || 0) - (a.likes || 0);
+      
+      // Default: Latest (by createdAt or updatedAt if mock)
+      const getTime = (s: Script) => {
+        if (s.createdAt?.seconds) return s.createdAt.seconds;
+        if (s.createdAt instanceof Date) return s.createdAt.getTime() / 1000;
+        // Fallback for mock data which only has updatedAt as a string
+        return 0;
+      };
+      
+      return getTime(b) - getTime(a);
+    });
+  }, [selectedCategory, searchQuery, allScripts, sortBy]);
 
   const handleOpenSubmit = () => {
     if (user) {
@@ -189,6 +357,24 @@ export default function App() {
             onOpenUserSearch={() => setIsUserSearchOpen(true)}
           />
 
+          {/* Floating Crazy IA Button */}
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setCurrentPage('crazy-ia')}
+            className={cn(
+              "fixed bottom-8 right-8 z-[60] w-16 h-16 rounded-2xl bg-brand text-black flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.5)] cursor-pointer group transition-all",
+              currentPage === 'crazy-ia' && "hidden"
+            )}
+          >
+            <Sparkles className="w-8 h-8 group-hover:animate-spin-slow" />
+            <div className="absolute -top-10 right-0 bg-black/80 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-brand/20">
+              Crazy IA
+            </div>
+          </motion.button>
+
           <main>
             {currentPage === 'scripts' ? (
               <>
@@ -203,14 +389,28 @@ export default function App() {
               <div className="flex flex-col lg:flex-row gap-10">
                 {/* Main Content */}
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-8">
+                  <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                       <Star size={20} className="text-brand" fill="currentColor" />
                       {siteConfig?.featuredTitle || 'Featured Scripts'}
                     </h2>
-                    <span className="text-sm text-zinc-500 font-medium">
-                      Showing {filteredScripts.length} results
-                    </span>
+                    
+                    <div className="flex items-center gap-4 bg-zinc-900/50 p-1 rounded-xl border border-border/50">
+                      {(['latest', 'views', 'likes'] as const).map((sort) => (
+                        <button
+                          key={sort}
+                          onClick={() => setSortBy(sort)}
+                          className={cn(
+                            "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
+                            sortBy === sort 
+                              ? "bg-brand text-black" 
+                              : "text-zinc-500 hover:text-white"
+                          )}
+                        >
+                          {sort}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   
                   <FilterBar 
@@ -352,6 +552,8 @@ export default function App() {
             </>
             ) : currentPage === 'executors' ? (
               <Executors isAdmin={isAdmin} />
+            ) : currentPage === 'crazy-ia' ? (
+              <AISearch siteConfig={siteConfig} />
             ) : currentPage === 'admin' ? (
               <AdminPanel onEditScript={handleEditScript} />
             ) : null}

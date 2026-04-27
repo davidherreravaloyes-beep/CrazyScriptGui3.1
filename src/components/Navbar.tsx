@@ -1,12 +1,12 @@
 import { motion } from 'motion/react';
-import { Search, Terminal, Flame, Star, Clock, User as UserIcon, Download, ExternalLink, Menu, X, LogOut, Shield, Settings, Gavel } from 'lucide-react';
+import { Search, Terminal, Flame, Star, Clock, User as UserIcon, Download, ExternalLink, Menu, X, LogOut, Shield, Settings, Gavel, Sparkles, Home } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
 import { db, auth, googleProvider, signInWithPopup, onAuthStateChanged, type User } from '../lib/firebase';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { ProfileModal } from './ProfileModal';
 
-export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSearch }: { onOpenSubmit: () => void, onPageChange: (page: 'scripts' | 'executors' | 'admin' | 'login') => void, currentPage: string, onOpenUserSearch?: () => void }) {
+export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSearch }: { onOpenSubmit: () => void, onPageChange: (page: 'scripts' | 'executors' | 'admin' | 'login' | 'crazy-ia') => void, currentPage: string, onOpenUserSearch?: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -117,6 +117,13 @@ export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSear
           >
             Executors
           </button>
+          <button 
+            onClick={() => onPageChange('crazy-ia')}
+            className={cn("transition-colors flex items-center gap-1.5", currentPage === 'crazy-ia' ? "text-brand" : "text-zinc-400 hover:text-brand")}
+          >
+            <Sparkles size={14} className={cn(currentPage === 'crazy-ia' ? "text-brand" : "text-zinc-500")} />
+            Crazy IA
+          </button>
           {isAdmin && (
             <button 
               onClick={() => onPageChange('admin')}
@@ -201,7 +208,17 @@ export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSear
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <button 
+            onClick={() => onPageChange('scripts')}
+            className={cn(
+              "md:hidden p-2 rounded-full transition-all flex items-center justify-center",
+              currentPage === 'scripts' ? "bg-brand text-black" : "bg-zinc-900 text-zinc-400 border border-white/5"
+            )}
+          >
+            <Home size={16} />
+          </button>
+
           {!user && (
             <button 
               onClick={handleLogin}
@@ -213,7 +230,7 @@ export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSear
 
           <motion.button 
             whileTap={{ scale: 0.9 }}
-            className="md:hidden text-zinc-400 p-1.5" 
+            className="md:hidden text-zinc-400 p-1.5 ml-1" 
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -239,6 +256,13 @@ export function Navbar({ onOpenSubmit, onPageChange, currentPage, onOpenUserSear
             className={cn("block w-full text-left py-2 px-4 rounded-lg", currentPage === 'executors' ? "bg-brand/10 text-brand" : "text-zinc-400")}
           >
             Executors
+          </button>
+          <button 
+            onClick={() => { onPageChange('crazy-ia'); setIsOpen(false); }}
+            className={cn("block w-full text-left py-2 px-4 rounded-lg flex items-center gap-2", currentPage === 'crazy-ia' ? "bg-brand/10 text-brand" : "text-zinc-400")}
+          >
+            <Sparkles size={16} />
+            Crazy IA
           </button>
           {isAdmin && (
             <button 

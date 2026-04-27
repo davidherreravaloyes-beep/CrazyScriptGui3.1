@@ -202,7 +202,7 @@ export function ExecutorDetail({ executor, onBack, isAdmin }: { executor: Execut
 
           <div className="pt-4 border-t border-[#2a2a32] flex items-center gap-2 text-[11px] font-bold text-zinc-500">
              <Calendar size={14} />
-             Updated {executor.updatedDate}
+             Updated {executor.updatedDate || (executor.updatedAt?.toDate ? executor.updatedAt.toDate().toLocaleDateString() : 'Just now')}
           </div>
         </div>
 

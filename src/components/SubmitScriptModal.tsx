@@ -1,11 +1,30 @@
 import { useState, useEffect, type FormEvent, useRef, type ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, Terminal, Code, Type, Gamepad2, Layers, CheckCircle2, Loader2, Image as ImageIcon, Plus, Gem } from 'lucide-react';
+import { X, Upload, Terminal, Code, Type, Gamepad2, Layers, CheckCircle2, Loader2, Image as ImageIcon, Plus, Gem, TreePine, Target, Sword, Cloud, Globe, Leaf, Zap, Skull, Shield, Search, Lock, Key, Ghost, Flame, Star, Heart } from 'lucide-react';
 import { auth, db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { compressImage } from '../lib/imageUtils';
 import { CATEGORIES, Script } from '../constants';
+import { cn } from '../lib/utils';
+
+const AVAILABLE_ICONS = [
+  { name: 'TreePine', Icon: TreePine },
+  { name: 'Target', Icon: Target },
+  { name: 'Sword', Icon: Sword },
+  { name: 'Cloud', Icon: Cloud },
+  { name: 'Globe', Icon: Globe },
+  { name: 'Leaf', Icon: Leaf },
+  { name: 'Zap', Icon: Zap },
+  { name: 'Skull', Icon: Skull },
+  { name: 'Shield', Icon: Shield },
+  { name: 'Search', Icon: Search },
+  { name: 'Lock', Icon: Lock },
+  { name: 'Key', Icon: Key },
+  { name: 'Ghost', Icon: Ghost },
+  { name: 'Gamepad2', Icon: Gamepad2 },
+  { name: 'Flame', Icon: Flame }
+];
 
 export function SubmitScriptModal({ onClose, editScript, isAdmin }: { onClose: () => void, editScript?: Script, isAdmin?: boolean }) {
   const [loading, setLoading] = useState(false);
@@ -22,7 +41,8 @@ export function SubmitScriptModal({ onClose, editScript, isAdmin }: { onClose: (
     category: 'Universal',
     rawScript: '',
     thumbnail: 'https://images.unsplash.com/photo-1614680376593-902f74cc0d41?w=800&auto=format&fit=crop&q=60',
-    isPremium: false
+    isPremium: false,
+    iconName: ''
   });
 
   useEffect(() => {
@@ -36,7 +56,8 @@ export function SubmitScriptModal({ onClose, editScript, isAdmin }: { onClose: (
         thumbnail: editScript.thumbnail || 'https://images.unsplash.com/photo-1614680376593-902f74cc0d41?w=800&auto=format&fit=crop&q=60',
         isNew: !!editScript.isNew,
         isTrending: !!editScript.isTrending,
-        isPremium: !!editScript.isPremium
+        isPremium: !!editScript.isPremium,
+        iconName: editScript.iconName || 'Gamepad2'
       } as any);
     }
   }, [editScript]);
@@ -113,6 +134,11 @@ export function SubmitScriptModal({ onClose, editScript, isAdmin }: { onClose: (
     e.preventDefault();
     if (!auth.currentUser) {
       alert("You must be signed in to publish scripts.");
+      return;
+    }
+    
+    if (!formData.iconName) {
+      alert("Please select an icon for your script.");
       return;
     }
     
@@ -286,6 +312,29 @@ export function SubmitScriptModal({ onClose, editScript, isAdmin }: { onClose: (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <Star size={14} /> Choose Script Icon
+                  </label>
+                  <div className="grid grid-cols-5 sm:grid-cols-8 gap-3">
+                    {AVAILABLE_ICONS.map(({ name, Icon }) => (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, iconName: name })}
+                        className={cn(
+                          "w-full aspect-square flex items-center justify-center rounded-xl border transition-all",
+                          formData.iconName === name 
+                            ? "bg-brand/20 border-brand text-brand ring-2 ring-brand/20" 
+                            : "bg-zinc-900 border-border text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
+                        )}
+                      >
+                        <Icon size={20} />
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {isAdmin && (

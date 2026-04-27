@@ -20,7 +20,9 @@ export function AdminPanel({ onEditScript }: { onEditScript?: (script: any) => v
     brandColor: '#8B5CF6',
     heroTitle: 'Enhance Your Experience with Premium Gaming Scripts',
     heroSubtitle: 'Explore thousands of verified, high-performance scripts and GUIs for your favorite games. Zero malware, 100% efficiency.',
-    heroBadge: 'V3.0 IS NOW LIVE',
+    heroBadge: 'Update 3.1 Is now live',
+    heroSecondaryTitle: 'The site with the best premium and free scripts',
+    heroOwnerName: 'Helpers Elizz',
     footerText: 'The #1 platform for verified gaming scripts and executors.',
     discordLink: 'https://discord.gg/5PSyhpvTn',
     splashText: 'CrazyGuiscripts',
@@ -31,7 +33,10 @@ export function AdminPanel({ onEditScript }: { onEditScript?: (script: any) => v
     uploadTitle: 'Upload your own scripts',
     uploadSubtitle: 'Join 1,200+ developers sharing their creations with the largest community of script-users. Get verified today.',
     premiumTitle: 'Premium Scripts',
-    premiumSubtitle: 'Get access to undetected, high-performance private scripts.'
+    premiumSubtitle: 'Get access to undetected, high-performance private scripts.',
+    aiTitle: 'Crazy IA',
+    aiSubtitle: 'Discover latest scripts with AI power',
+    aiSuggestions: 'Blox Fruits Auto Farm, Haze Piece Script, Hoho Hub, OMG Hub Script'
   });
   const [savingConfig, setSavingConfig] = useState(false);
 
@@ -186,6 +191,13 @@ export function AdminPanel({ onEditScript }: { onEditScript?: (script: any) => v
             <Palette size={20} />
             Branding
           </button>
+          <button 
+            onClick={() => setActiveTab('executors' as any)}
+            className={`w-full flex items-center gap-3 px-6 py-4 rounded-xl font-bold transition-all ${activeTab === ('executors' as any) ? 'bg-brand text-black' : 'text-zinc-400 hover:bg-white/5'}`}
+          >
+            <Shield size={20} />
+            Executors
+          </button>
         </div>
 
         {/* Content */}
@@ -302,6 +314,24 @@ export function AdminPanel({ onEditScript }: { onEditScript?: (script: any) => v
                           type="text" 
                           value={siteConfig.heroBadge}
                           onChange={e => setSiteConfig({...siteConfig, heroBadge: e.target.value})}
+                          className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Hero Secondary Title</label>
+                        <input 
+                          type="text" 
+                          value={siteConfig.heroSecondaryTitle || ''}
+                          onChange={e => setSiteConfig({...siteConfig, heroSecondaryTitle: e.target.value})}
+                          className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Hero Owner/Credit Name</label>
+                        <input 
+                          type="text" 
+                          value={siteConfig.heroOwnerName || ''}
+                          onChange={e => setSiteConfig({...siteConfig, heroOwnerName: e.target.value})}
                           className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors"
                         />
                     </div>
@@ -424,23 +454,58 @@ export function AdminPanel({ onEditScript }: { onEditScript?: (script: any) => v
                     <div className="h-px bg-border/50" />
                     
                     <h4 className="text-lg font-bold text-white">Premium Section</h4>
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Premium Title</label>
-                        <input 
-                          type="text" 
-                          value={siteConfig.premiumTitle || ''}
-                          onChange={e => setSiteConfig({...siteConfig, premiumTitle: e.target.value})}
-                          className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors"
-                        />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Premium Title</label>
+                          <input 
+                            type="text" 
+                            value={siteConfig.premiumTitle || ''}
+                            onChange={e => setSiteConfig({...siteConfig, premiumTitle: e.target.value})}
+                            className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors"
+                          />
+                      </div>
+                      <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Premium Subtitle</label>
+                          <textarea 
+                            rows={2}
+                            value={siteConfig.premiumSubtitle || ''}
+                            onChange={e => setSiteConfig({...siteConfig, premiumSubtitle: e.target.value})}
+                            className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors resize-none"
+                          />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Premium Subtitle</label>
-                        <textarea 
-                          rows={2}
-                          value={siteConfig.premiumSubtitle || ''}
-                          onChange={e => setSiteConfig({...siteConfig, premiumSubtitle: e.target.value})}
-                          className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors resize-none"
-                        />
+
+                    <div className="h-px bg-border/50" />
+                    
+                    <h4 className="text-lg font-bold text-white">AI Search (Crazy IA)</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">AI Title</label>
+                          <input 
+                            type="text" 
+                            value={siteConfig.aiTitle || ''}
+                            onChange={e => setSiteConfig({...siteConfig, aiTitle: e.target.value})}
+                            className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors"
+                          />
+                      </div>
+                      <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">AI Subtitle</label>
+                          <input 
+                            type="text" 
+                            value={siteConfig.aiSubtitle || ''}
+                            onChange={e => setSiteConfig({...siteConfig, aiSubtitle: e.target.value})}
+                            className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors"
+                          />
+                      </div>
+                      <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">AI Suggestions (Comma separated)</label>
+                          <input 
+                            type="text" 
+                            value={siteConfig.aiSuggestions || ''}
+                            onChange={e => setSiteConfig({...siteConfig, aiSuggestions: e.target.value})}
+                            className="w-full bg-[#121217] border border-border rounded-xl px-4 py-3 text-white focus:border-brand/50 outline-none transition-colors"
+                          />
+                      </div>
                     </div>
                  </div>
 
@@ -524,6 +589,20 @@ export function AdminPanel({ onEditScript }: { onEditScript?: (script: any) => v
                  </button>
               </div>
             </div>
+          )}
+
+          {activeTab === ('executors' as any) && (
+             <div className="bg-card border border-border rounded-3xl overflow-hidden p-6 text-center">
+                <Shield size={48} className="text-zinc-700 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Executor Management</h3>
+                <p className="text-zinc-500 mb-6">Manage executors by visiting the Executors page and clicking "Edit Executor" in the details view.</p>
+                <button 
+                  onClick={() => (window as any).location.href = '/executors'}
+                  className="px-6 py-3 bg-brand text-black font-bold rounded-xl"
+                >
+                  Go to Executors Page
+                </button>
+             </div>
           )}
 
           {activeTab === 'users' && (

@@ -72,29 +72,54 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 // User Profile Sync Helper
 export async function syncUserProfile(user: User) {
   const userRef = doc(db, 'users', user.uid);
+  const emailRef = doc(db, 'users', user.uid, 'private', 'email');
+  
   try {
     const userDoc = await getDoc(userRef);
     if (!userDoc.exists()) {
-      // Create new user
-      await setDoc(userRef, {
-        uid: user.uid,
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-        createdAt: serverTimestamp(),
-        lastLogin: serverTimestamp(),
-      });
+      // Create new user (public)
+      try {
+        await setDoc(userRef, {
+          uid: user.uid,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+        });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}`);
+      }
     } else {
-      // Update existing user
-      await updateDoc(userRef, {
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-        lastLogin: serverTimestamp(),
-      });
+      // Update existing user (public)
+      try {
+        await updateDoc(userRef, {
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          lastLogin: serverTimestamp(),
+        });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
+      }
     }
+
+    // Always sync email to private path
+    try {
+      await setDoc(emailRef, {
+        email: user.email,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/private/email`);
+    }
+
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
+    if ((error as any).code === 'permission-denied') {
+      handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
+    }
+    // Re-throw if it wasn't a firestore error handled above
+    if (!(error instanceof Error && error.message.includes('authInfo'))) {
+       console.error("Profile sync error:", error);
+    }
   }
 }
 

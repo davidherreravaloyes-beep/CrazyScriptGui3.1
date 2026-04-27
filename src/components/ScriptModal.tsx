@@ -3,7 +3,7 @@ import { X, Copy, Check, Download, AlertCircle, Terminal, Heart, Edit2, Star } f
 import { useState, useEffect } from 'react';
 import { Script } from '../constants';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { cn } from '../lib/utils';
 
 import ReactMarkdown from 'react-markdown';
@@ -38,34 +38,44 @@ export function ScriptModal({ script, onClose, isAdmin, onEdit }: { script: Scri
     setIsRating(true);
     const ratingPath = `scripts/${script.id}/ratings/${auth.currentUser.uid}`;
     try {
-      // Save rating in subcollection
+      // 1. Save user's individual rating document (subcollection works regardless of parent existence)
       await setDoc(doc(db, 'scripts', script.id, 'ratings', auth.currentUser.uid), {
         rating,
         userId: auth.currentUser.uid,
-        updatedAt: new Date().toISOString()
+        updatedAt: serverTimestamp()
       });
 
-      // Update script summary (simplified for demo)
-      const currentRatingCount = script.ratingCount || 0;
-      const currentRatingSum = (script.rating || 0) * currentRatingCount;
-      
-      let newRatingCount = currentRatingCount;
-      let newRatingSum = currentRatingSum;
+      // 2. Attempt to update aggregate statistics on the parent script document
+      try {
+        const scriptRef = doc(db, 'scripts', script.id);
+        const scriptSnap = await getDoc(scriptRef);
+        
+        if (scriptSnap.exists()) {
+          const data = scriptSnap.data();
+          const currentRatingCount = data.ratingCount || 0;
+          const currentRatingSum = (data.rating || 0) * currentRatingCount;
+          
+          let newRatingCount = currentRatingCount;
+          let newRatingSum = currentRatingSum;
 
-      if (userRating === null) {
-        newRatingCount += 1;
-        newRatingSum += rating;
-      } else {
-        newRatingSum = (newRatingSum - userRating) + rating;
+          if (userRating === null) {
+            newRatingCount += 1;
+            newRatingSum += rating;
+          } else {
+            newRatingSum = (newRatingSum - userRating) + rating;
+          }
+
+          const newAverage = Math.round((newRatingSum / newRatingCount) * 10) / 10;
+
+          await updateDoc(scriptRef, {
+            rating: newAverage,
+            ratingCount: newRatingCount,
+            updatedAt: serverTimestamp()
+          });
+        }
+      } catch (e) {
+        console.warn("Skipping aggregate update (it might be a mock script):", e);
       }
-
-      const newAverage = newRatingSum / newRatingCount;
-
-      await updateDoc(doc(db, 'scripts', script.id), {
-        rating: Math.round(newAverage * 10) / 10,
-        ratingCount: newRatingCount,
-        updatedAt: new Date().toISOString()
-      });
 
       setUserRating(rating);
     } catch (error: any) {

@@ -12,6 +12,7 @@ interface UserProfileModalProps {
 
 export function UserProfileModal({ isOpen, onClose, userId }: UserProfileModalProps) {
   const [userData, setUserData] = useState<any>(null);
+  const [privateEmail, setPrivateEmail] = useState<string | null>(null);
   const [userScripts, setUserScripts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,6 +24,16 @@ export function UserProfileModal({ isOpen, onClose, userId }: UserProfileModalPr
           const userDoc = await getDoc(doc(db, 'users', userId));
           if (userDoc.exists()) {
             setUserData(userDoc.data());
+          }
+
+          // Try to fetch private email if authorized
+          try {
+            const emailDoc = await getDoc(doc(db, 'users', userId, 'private', 'email'));
+            if (emailDoc.exists()) {
+              setPrivateEmail(emailDoc.data().email);
+            }
+          } catch (e) {
+            // Probably not authorized, which is fine
           }
 
           const q = query(collection(db, 'scripts'), where('authorId', '==', userId));
@@ -39,7 +50,7 @@ export function UserProfileModal({ isOpen, onClose, userId }: UserProfileModalPr
     }
   }, [isOpen, userId]);
 
-  const isAdmin = userData?.email === 'davidherreravaloyes@gmail.com' || userData?.email === 'herreravaloyesa@gmail.com';
+  const isAdmin = userData?.uid === 'davidherreravaloyes' || userId === 'davidherreravaloyes' || privateEmail === 'davidherreravaloyes@gmail.com' || privateEmail === 'herreravaloyesa@gmail.com';
 
   return (
     <AnimatePresence>

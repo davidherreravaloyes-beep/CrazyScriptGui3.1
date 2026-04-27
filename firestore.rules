@@ -36,32 +36,47 @@ service cloud.firestore {
     // Validation Helpers
     function isValidUser(data) {
       return data.uid == request.auth.uid &&
-             (data.email == null || (data.email is string && data.email.size() <= 200)) &&
-             (data.displayName == null || (data.displayName is string && data.displayName.size() <= 100)) &&
-             (data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 500));
+             (data.displayName == null || (data.displayName is string && data.displayName.size() <= 200)) &&
+             (data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 1000));
     }
 
     function isValidScript(data) {
-      return data.title is string && data.title.size() <= 100 &&
-             isSignedIn() && data.authorId == request.auth.uid &&
+      return data.title is string && data.title.size() <= 150 &&
+             isSignedIn() && (data.authorId == request.auth.uid || isAdmin()) &&
              data.rawScript is string && data.rawScript.size() <= 100000 &&
-             (data.description == null || (data.description is string && data.description.size() <= 5000)) &&
-             (data.game == null || (data.game is string && data.game.size() <= 100)) &&
-             (data.category == null || (data.category is string && data.category.size() <= 50)) &&
-             (data.thumbnail == null || (data.thumbnail is string && data.thumbnail.size() <= 500)) &&
+             (data.description == null || (data.description is string && data.description.size() <= 10000)) &&
+             (data.game == null || (data.game is string && data.game.size() <= 200)) &&
+             (data.category == null || (data.category is string && data.category.size() <= 100)) &&
+             (data.thumbnail == null || (data.thumbnail is string && data.thumbnail.size() <= 1000)) &&
+             (data.iconName == null || (data.iconName is string && data.iconName.size() <= 100)) &&
+             (data.author == null || (data.author is string && data.author.size() <= 100)) &&
+             (data.discoverySource == null || (data.discoverySource is string && data.discoverySource.size() <= 100)) &&
+             (data.isVerified == null || data.isVerified is bool) &&
              (data.isPremium == null || data.isPremium is bool) &&
-             (isAdmin() || data.isPremium == false || data.isPremium == null);
+             (isAdmin() || data.isPremium == false || data.isPremium == null) &&
+             (data.views == null || data.views is number) &&
+             (data.likes == null || data.likes is number) &&
+             (data.updatedAt == null || data.updatedAt == request.time);
     }
 
     function isValidRating(data) {
       return (isSignedIn() ? data.userId == request.auth.uid : data.userId == 'guest') &&
-             data.rating is number && data.rating >= 1 && data.rating <= 5;
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             (data.updatedAt == null || data.updatedAt == request.time);
     }
 
     function isValidExecutor(data) {
-      return data.name is string && data.name.size() <= 100 &&
-             data.banner is string && data.banner.size() <= 500 &&
-             data.icon is string && data.icon.size() <= 500;
+      return data.name is string && data.name.size() <= 150 &&
+             data.banner is string && data.banner.size() <= 1000 &&
+             data.icon is string && data.icon.size() <= 1000 &&
+             (data.author == null || (data.author is string && data.author.size() <= 100)) &&
+             (data.description == null || (data.description is string && data.description.size() <= 5000)) &&
+             (data.status == null || (data.status in ['Working', 'Outdated'])) &&
+             (data.version == null || (data.version is string && data.version.size() <= 50)) &&
+             (data.platforms == null || data.platforms is list) &&
+             (data.downloads == null || (data.downloads is string && data.downloads.size() <= 50)) &&
+             (data.price == null || (data.price is string && data.price.size() <= 50)) &&
+             (data.updatedAt == null || data.updatedAt == request.time);
     }
 
     function isValidUsername(data) {
@@ -83,20 +98,27 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if true;
-      allow create: if isSignedIn() && isValidUser(incoming()) && incoming().createdAt == request.time;
+      allow create: if isSignedIn() && isValidId(userId) && userId == request.auth.uid && isValidUser(incoming()) && incoming().createdAt == request.time;
       allow update: if (isOwner(userId) || isAdmin()) && (
         isAdmin() || 
-        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'lastLogin', 'email']) && incoming().lastLogin == request.time)
+        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'lastLogin']) && incoming().lastLogin == request.time)
       );
+
+      match /private/email {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId) && 
+          (incoming().email is string && incoming().email.size() <= 200) &&
+          (incoming().updatedAt == null || incoming().updatedAt == request.time);
+      }
     }
 
     match /scripts/{scriptId} {
       allow read: if true;
-      allow create: if isSignedIn() && isValidId(scriptId) && isValidScript(incoming()) && incoming().createdAt == request.time;
-      allow update: if (isAdmin() || (isSignedIn() && isOwner(existing().authorId) && incoming().diff(existing()).affectedKeys().hasAll(['updatedAt']) && incoming().updatedAt == request.time)) ||
+      allow create: if isAdmin() || (isSignedIn() && isValidId(scriptId) && isValidScript(incoming()) && incoming().createdAt == request.time);
+      allow update: if isAdmin() || (isSignedIn() && isOwner(existing().authorId) && (incoming().diff(existing()).affectedKeys().hasAll(['updatedAt']) || isAdmin()) && (incoming().updatedAt == request.time || isAdmin())) ||
         // Action: Rate/Interact
-        (incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'ratingCount', 'views', 'likes']) &&
-         true
+        (incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'ratingCount', 'views', 'likes', 'updatedAt']) &&
+         (incoming().updatedAt == null || incoming().updatedAt == request.time)
         );
       allow delete: if isAdmin() || (isSignedIn() && isOwner(existing().authorId));
 

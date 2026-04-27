@@ -6,6 +6,14 @@ import { RECENT_ACTIVITY } from '../constants';
 export function ActivityFeed() {
   const [activities, setActivities] = useState(RECENT_ACTIVITY);
   const [loading, setLoading] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState(1248);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setOnlineUsers(prev => prev + 10);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -90,7 +98,7 @@ export function ActivityFeed() {
       <div className="mt-10 pt-6 border-t border-border/30">
         <div className="flex items-center justify-between text-xs mb-3">
           <span className="text-zinc-500">Online Users</span>
-          <span className="text-white font-bold">1,248</span>
+          <span className="text-white font-bold">{onlineUsers.toLocaleString()}</span>
         </div>
         <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden">
            <motion.div 

@@ -5,7 +5,7 @@ import { MOCK_EXECUTORS, Executor } from '../constants';
 import { cn } from '../lib/utils';
 import { ExecutorDetail } from './ExecutorDetail';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 export function Executors({ isAdmin }: { isAdmin: boolean }) {
   const [search, setSearch] = useState('');
@@ -16,7 +16,7 @@ export function Executors({ isAdmin }: { isAdmin: boolean }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'executors'));
+    const q = query(collection(db, 'executors'), orderBy('updatedAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Executor));
       setFirestoreExecutors(docs);

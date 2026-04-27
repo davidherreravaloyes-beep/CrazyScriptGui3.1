@@ -16,6 +16,8 @@ export interface Script {
   isPremium?: boolean;
   rating?: number;
   ratingCount?: number;
+  createdAt?: any;
+  iconName?: string;
 }
 
 export interface Executor {
@@ -36,6 +38,7 @@ export interface Executor {
   website?: string;
   discord?: string;
   gallery?: string[];
+  updatedAt?: any;
 }
 
 export const CATEGORIES = [
@@ -195,7 +198,8 @@ export const MOCK_SCRIPTS: Script[] = [
     thumbnail: 'https://images.unsplash.com/photo-1614680376593-902f74cc0d41?w=800&auto=format&fit=crop&q=60',
     updatedAt: '2 hours ago',
     isTrending: true,
-    rawScript: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/CrazyGui/AutoFarm/main/script.lua"))()'
+    rawScript: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/CrazyGui/AutoFarm/main/script.lua"))()',
+    iconName: 'TreePine'
   },
   {
     id: '2',
@@ -209,7 +213,8 @@ export const MOCK_SCRIPTS: Script[] = [
     thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&auto=format&fit=crop&q=60',
     updatedAt: '5 hours ago',
     isNew: true,
-    rawScript: '-- Universal Aimbot V2\\nprint("Elite ESP Loaded")'
+    rawScript: '-- Universal Aimbot V2\\nprint("Elite ESP Loaded")',
+    iconName: 'Target'
   },
   {
     id: '3',
@@ -223,7 +228,8 @@ export const MOCK_SCRIPTS: Script[] = [
     thumbnail: 'https://images.unsplash.com/photo-1578632738980-df317604323c?w=800&auto=format&fit=crop&q=60',
     updatedAt: '1 day ago',
     isTrending: true,
-    rawScript: 'loadstring(game:HttpGet("https://api.crazygui.net/aa-macro"))()'
+    rawScript: 'loadstring(game:HttpGet("https://api.crazygui.net/aa-macro"))()',
+    iconName: 'Sword'
   },
   {
     id: '4',
@@ -236,7 +242,8 @@ export const MOCK_SCRIPTS: Script[] = [
     game: 'Adopt Me!',
     thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&auto=format&fit=crop&q=60',
     updatedAt: '3 hours ago',
-    rawScript: 'print("Sniper Active")'
+    rawScript: 'print("Sniper Active")',
+    iconName: 'Search'
   },
   {
     id: '5',
@@ -250,7 +257,8 @@ export const MOCK_SCRIPTS: Script[] = [
     thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=60',
     updatedAt: '10 mins ago',
     isTrending: true,
-    rawScript: 'game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100'
+    rawScript: 'game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100',
+    iconName: 'Zap'
   },
   {
     id: 'p1',

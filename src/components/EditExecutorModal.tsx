@@ -2,7 +2,7 @@ import { useState, type FormEvent, useRef, type ChangeEvent } from 'react';
 import { motion } from 'motion/react';
 import { X, Save, Type, User, Globe, Image as ImageIcon, Settings, CheckCircle2, Loader2, AlertCircle, Plus } from 'lucide-react';
 import { auth, db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { compressImage } from '../lib/imageUtils';
 import { Executor } from '../constants';
@@ -107,7 +107,7 @@ export function EditExecutorModal({ executor, onClose }: { executor: Executor, o
         id: executor.id,
         platforms: executor.platforms, // Keep existing platforms
         downloads: executor.downloads, // Keep existing downloads
-        updatedAt: new Date().toISOString()
+        updatedAt: serverTimestamp()
       }, { merge: true });
       
       setSuccess(true);

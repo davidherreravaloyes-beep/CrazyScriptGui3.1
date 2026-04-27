@@ -5,7 +5,9 @@ export function Hero({ onSearch, onOpenSubmit, siteConfig }: { onSearch: (query:
   const config = siteConfig || {
     heroTitle: 'Enhance Your Experience with Premium Gaming Scripts',
     heroSubtitle: 'Explore thousands of verified, high-performance scripts and GUIs for your favorite games. Zero malware, 100% efficiency.',
-    heroBadge: 'V3.0 IS NOW LIVE'
+    heroBadge: 'Update 3.1 Is now live',
+    heroSecondaryTitle: 'The site with the best premium and free scripts',
+    heroOwnerName: 'Helpers Elizz'
   };
 
   return (
@@ -60,11 +62,13 @@ export function Hero({ onSearch, onOpenSubmit, siteConfig }: { onSearch: (query:
           className="mb-8 px-4"
         >
           <h2 className="text-xl sm:text-2xl md:text-3xl font-black italic tracking-tighter text-white mb-2 uppercase leading-tight">
-            The site with <span className="text-brand drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]">the best</span> premium and free <span className="text-brand drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]">scripts</span>
+            {config.heroSecondaryTitle || 'The site with the best premium and free scripts'}
           </h2>
           <div className="flex flex-col items-center">
             <div className="h-0.5 w-24 bg-brand rounded-full mb-2 shadow-[0_0_10px_#a855f7]" />
-            <span className="text-xs sm:text-sm font-black uppercase tracking-[0.4em] text-brand/80 ml-1 drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]">Helpers Elizz</span>
+            <span className="text-xs sm:text-sm font-black uppercase tracking-[0.4em] text-brand/80 ml-1 drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]">
+              {config.heroOwnerName || 'Helpers Elizz'}
+            </span>
           </div>
         </motion.div>
 
